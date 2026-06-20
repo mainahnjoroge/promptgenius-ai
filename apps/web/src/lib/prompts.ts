@@ -8,6 +8,13 @@ import type {
   WorkflowStep,
 } from "@promptgenius/core";
 import { db } from "./db";
+import { persistenceEnabled } from "./env.server";
+import {
+  demoDeletePrompt,
+  demoListPrompts,
+  demoSavePrompt,
+  demoSetFavorite,
+} from "./demo-store";
 import type { SavedPromptDTO } from "./dto";
 
 export type { SavedPromptDTO } from "./dto";
@@ -47,6 +54,7 @@ export async function listSavedPrompts(
   userId: string,
   opts?: { favoritesOnly?: boolean },
 ): Promise<SavedPromptDTO[]> {
+  if (!persistenceEnabled) return demoListPrompts(userId, opts?.favoritesOnly);
   try {
     const rows = await db.savedPrompt.findMany({
       where: { userId, ...(opts?.favoritesOnly ? { favorite: true } : {}) },
@@ -63,6 +71,7 @@ export async function savePrompt(
   userId: string,
   p: GeneratedPrompt,
 ): Promise<SavedPromptDTO> {
+  if (!persistenceEnabled) return demoSavePrompt(userId, p);
   const row = await db.savedPrompt.create({
     data: {
       userId,
@@ -88,6 +97,7 @@ export async function setFavorite(
   id: string,
   favorite: boolean,
 ): Promise<boolean> {
+  if (!persistenceEnabled) return demoSetFavorite(userId, id, favorite);
   const result = await db.savedPrompt.updateMany({
     where: { id, userId },
     data: { favorite },
@@ -96,6 +106,7 @@ export async function setFavorite(
 }
 
 export async function deletePrompt(userId: string, id: string): Promise<boolean> {
+  if (!persistenceEnabled) return demoDeletePrompt(userId, id);
   const result = await db.savedPrompt.deleteMany({ where: { id, userId } });
   return result.count > 0;
 }

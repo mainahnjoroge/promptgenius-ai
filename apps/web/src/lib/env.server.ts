@@ -28,3 +28,15 @@ export const serverEnv = {
 export const aiEnabled = !!serverEnv.anthropicApiKey;
 export const authEnabledServer = !!(serverEnv.clerkSecret && serverEnv.clerkPublishable);
 export const billingEnabledServer = !!serverEnv.stripeSecret;
+
+/**
+ * True when a real, writable database is configured. In dev we always persist
+ * (local SQLite is fine). In production a SQLite (`file:`) URL or no URL means
+ * the serverless filesystem is read-only — so we fall back to an in-memory demo
+ * store instead of crashing. When a real DB IS configured but a query fails, we
+ * still fail closed (see user.ts) rather than silently degrading.
+ */
+const dbUrl = process.env.DATABASE_URL;
+export const persistenceEnabled =
+  process.env.NODE_ENV !== "production" ||
+  (!!dbUrl && !dbUrl.startsWith("file:"));

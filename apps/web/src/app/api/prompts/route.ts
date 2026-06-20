@@ -3,6 +3,8 @@ import type { GeneratedPrompt } from "@promptgenius/core";
 import { getCurrentUser } from "@/lib/user";
 import { listSavedPrompts, savePrompt } from "@/lib/prompts";
 import { db } from "@/lib/db";
+import { persistenceEnabled } from "@/lib/env.server";
+import { demoCountPrompts } from "@/lib/demo-store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -59,7 +61,9 @@ export async function POST(req: NextRequest) {
 
   // Per-user count cap to prevent storage abuse
   try {
-    const count = await db.savedPrompt.count({ where: { userId: user.id } });
+    const count = persistenceEnabled
+      ? await db.savedPrompt.count({ where: { userId: user.id } })
+      : demoCountPrompts(user.id);
     if (count >= MAX_PROMPTS_PER_USER) {
       return Response.json(
         { error: "saved prompt limit reached", limit: MAX_PROMPTS_PER_USER },

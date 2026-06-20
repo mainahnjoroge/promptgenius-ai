@@ -2,6 +2,8 @@ import "server-only";
 import type { TierId } from "@promptgenius/core";
 import { db } from "./db";
 import { getUserEmail, getUserId } from "./auth";
+import { persistenceEnabled } from "./env.server";
+import { demoGetUser, demoIncrementUsage, demoSetTier } from "./demo-store";
 
 const PERIOD_MS = 30 * 24 * 60 * 60 * 1000; // 30-day usage window
 
@@ -19,6 +21,13 @@ export type AppUser = {
 export async function getCurrentUser(): Promise<AppUser> {
   const id = await getUserId();
   const email = await getUserEmail();
+
+  // Demo mode (no real database): use the in-memory store so the product runs
+  // end-to-end with zero accounts. Real-DB failures still fall through to the
+  // fail-closed path below.
+  if (!persistenceEnabled) {
+    return demoGetUser(id, email ?? null);
+  }
 
   try {
     let user = await db.user.findUnique({ where: { id } });
@@ -60,6 +69,10 @@ export async function getCurrentUser(): Promise<AppUser> {
 }
 
 export async function incrementUsage(userId: string): Promise<void> {
+  if (!persistenceEnabled) {
+    demoIncrementUsage(userId);
+    return;
+  }
   await db.user.update({
     where: { id: userId },
     data: { usageCount: { increment: 1 } },
@@ -71,6 +84,10 @@ export async function setUserTier(
   tier: TierId,
   billingInterval: "monthly" | "annual" = "monthly",
 ): Promise<void> {
+  if (!persistenceEnabled) {
+    demoSetTier(userId, tier, billingInterval);
+    return;
+  }
   await db.user.update({
     where: { id: userId },
     data: { tier, billingInterval },
