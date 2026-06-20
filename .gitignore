@@ -41,8 +41,10 @@ coverage/
 # PWA generated service worker files
 apps/web/public/sw.js
 apps/web/public/workbox-*.js
+apps/web/public/swe-worker-*.js
 apps/web/public/sw.js.map
 apps/web/public/workbox-*.js.map
+apps/web/public/swe-worker-*.js.map
 
 # core built output
 packages/core/dist/
