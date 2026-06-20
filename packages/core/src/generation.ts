@@ -50,14 +50,14 @@ export function buildGenerationSystemPrompt(input: GenerationInput): string {
   return `${BASE_SYSTEM_PROMPT}
 
 INDUSTRY CONTEXT
-- Industry: ${input.industry} (domain: ${fw.label})
+- Industry: <user_industry>${input.industry}</user_industry> (domain: ${fw.label})
 - Apply relevant frameworks where useful: ${fw.frameworks.join(", ")}
 - Use correct terminology, e.g.: ${fw.terminology.join(", ")}
 
 CALIBRATION
 - ${SKILL_GUIDANCE[input.skillLevel]}
 - ${OUTPUT_GUIDANCE[input.outputType]}
-- Tone/style: ${input.tone?.trim() || "professional and confident"}
+- Tone/style: <user_tone>${input.tone?.trim() || "professional and confident"}</user_tone>
 - Target platform: ${platformLabel(input.platform)}
 
 OUTPUT FORMAT — respond with these markdown sections in this exact order:
@@ -94,11 +94,11 @@ Do not include any text before "## Title" or after the last tip.`;
 
 export function buildGenerationUserPrompt(input: GenerationInput): string {
   return `Create a prompt for this request:
-- Industry: ${input.industry}
-- Use case: ${input.useCase}
+- Industry: <user_industry>${input.industry}</user_industry>
+- Use case: <user_usecase>${input.useCase}</user_usecase>
 - Skill level: ${input.skillLevel}
 - Output type: ${input.outputType}
-- Tone: ${input.tone?.trim() || "(use a sensible default)"}
+- Tone: <user_tone>${input.tone?.trim() || "(use a sensible default)"}</user_tone>
 - Platform: ${input.platform ?? "generic"}`;
 }
 

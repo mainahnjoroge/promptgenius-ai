@@ -6,8 +6,10 @@ import { billingEnabledServer, serverEnv } from "@/lib/env.server";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+const VALID_TIERS: TierId[] = ["professional", "enterprise"];
+
 export async function POST(req: NextRequest) {
-  if (!billingEnabledServer || !serverEnv.stripeWebhookSecret) {
+  if (!billingEnabledServer || !serverEnv.stripeWebhookSecret || !serverEnv.stripeSecret) {
     return Response.json({ error: "billing not configured" }, { status: 400 });
   }
 
@@ -16,7 +18,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const { default: Stripe } = await import("stripe");
-    const stripe = new Stripe(serverEnv.stripeSecret!);
+    const stripe = new Stripe(serverEnv.stripeSecret);
     const event = stripe.webhooks.constructEvent(
       payload,
       sig ?? "",
@@ -25,11 +27,17 @@ export async function POST(req: NextRequest) {
 
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as {
-        metadata?: { userId?: string; tier?: TierId; interval?: BillingInterval };
+        metadata?: { userId?: string; tier?: string; interval?: string };
       };
       const { userId, tier, interval } = session.metadata ?? {};
-      if (userId && tier) {
-        await setUserTier(userId, tier, interval === "annual" ? "annual" : "monthly");
+
+      // Validate tier against known values before writing to DB.
+      if (userId && tier && VALID_TIERS.includes(tier as TierId)) {
+        const billingInterval: BillingInterval =
+          interval === "annual" ? "annual" : "monthly";
+        await setUserTier(userId, tier as TierId, billingInterval);
+      } else if (userId && tier) {
+        console.error("Webhook received unrecognised tier", { userId, tier });
       }
     }
 

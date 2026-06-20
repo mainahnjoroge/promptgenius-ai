@@ -6,7 +6,13 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const user = await getCurrentUser();
+  let user;
+  try {
+    user = await getCurrentUser();
+  } catch {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const tier = getTier(user.tier);
   return Response.json({
     user: {
@@ -20,10 +26,9 @@ export async function GET() {
       name: tier.name,
       allowedOutputTypes: tier.allowedOutputTypes,
     },
-    flags: {
-      ai: aiEnabled,
-      auth: authEnabledServer,
-      billing: billingEnabledServer,
-    },
+    // Internal config flags only returned in non-production for debugging.
+    ...(process.env.NODE_ENV !== "production" && {
+      flags: { ai: aiEnabled, auth: authEnabledServer, billing: billingEnabledServer },
+    }),
   });
 }

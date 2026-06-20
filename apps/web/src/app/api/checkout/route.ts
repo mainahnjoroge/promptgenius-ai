@@ -9,6 +9,13 @@ export const dynamic = "force-dynamic";
 const PAID_TIERS: TierId[] = ["professional", "enterprise"];
 
 export async function POST(req: NextRequest) {
+  let user;
+  try {
+    user = await getCurrentUser();
+  } catch {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const body = (await req.json().catch(() => ({}))) as {
     tier?: TierId;
     interval?: BillingInterval;
@@ -20,21 +27,23 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: "valid paid tier required" }, { status: 400 });
   }
 
-  const user = await getCurrentUser();
-
-  // --- Mock billing: no Stripe key → flip the tier immediately. ---
+  // Mock billing: only permitted in non-production environments.
   if (!billingEnabledServer) {
+    if (process.env.NODE_ENV === "production") {
+      return Response.json({ error: "Billing not configured" }, { status: 503 });
+    }
     await setUserTier(user.id, tier, interval);
-    return Response.json({
-      mock: true,
-      url: `/dashboard?upgraded=${tier}`,
-    });
+    return Response.json({ mock: true, url: `/dashboard?upgraded=${tier}` });
   }
 
-  // --- Real Stripe Checkout ---
+  // Real Stripe Checkout
+  if (!serverEnv.stripeSecret) {
+    return Response.json({ error: "Billing misconfigured" }, { status: 503 });
+  }
+
   try {
     const { default: Stripe } = await import("stripe");
-    const stripe = new Stripe(serverEnv.stripeSecret!);
+    const stripe = new Stripe(serverEnv.stripeSecret);
     const price =
       tier === "professional"
         ? serverEnv.stripePrices.professional[interval]
@@ -50,7 +59,10 @@ export async function POST(req: NextRequest) {
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       line_items: [{ price, quantity: 1 }],
-      customer_email: user.email ?? undefined,
+      // Reuse existing Stripe customer to avoid duplicates.
+      ...(user.stripeCustomerId
+        ? { customer: user.stripeCustomerId }
+        : { customer_email: user.email ?? undefined }),
       success_url: `${serverEnv.appUrl}/dashboard?upgraded=${tier}`,
       cancel_url: `${serverEnv.appUrl}/pricing`,
       metadata: { userId: user.id, tier, interval },

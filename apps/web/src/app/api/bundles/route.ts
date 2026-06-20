@@ -8,6 +8,13 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
+  let user;
+  try {
+    user = await getCurrentUser();
+  } catch {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const input = parseGenerationInput(await req.json().catch(() => null));
   if (!input) {
     return Response.json(
@@ -16,7 +23,6 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const user = await getCurrentUser();
   if (!canUseBundleGenerator(user.tier)) {
     return Response.json(
       {

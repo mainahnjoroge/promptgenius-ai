@@ -2,7 +2,12 @@ import { NextResponse } from "next/server";
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
 const authEnabled = !!process.env.CLERK_SECRET_KEY;
-const isProtected = createRouteMatcher(["/dashboard(.*)"]);
+
+// Protect dashboard pages and all API routes except the Stripe webhook.
+const isProtected = createRouteMatcher([
+  "/dashboard(.*)",
+  "/api/((?!webhooks).*)",
+]);
 
 const clerkHandler = clerkMiddleware(async (auth, req) => {
   if (isProtected(req)) await auth.protect();

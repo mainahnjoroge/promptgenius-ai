@@ -43,14 +43,16 @@ export async function getCurrentUser(): Promise<AppUser> {
       usagePeriodStart: user.usagePeriodStart,
       stripeCustomerId: user.stripeCustomerId,
     };
-  } catch {
-    // DB unavailable (no DATABASE_URL / SQLite not writable on serverless) — demo user fallback.
+  } catch (err) {
+    // In production, fail closed rather than granting elevated access.
+    if (process.env.NODE_ENV === "production") throw err;
+    // Dev-only fallback: return starter (lowest privilege) so gating is exercised.
     return {
       id,
       email: email ?? null,
-      tier: "professional" as TierId,
+      tier: "starter" as TierId,
       billingInterval: "monthly",
-      usageCount: 2,
+      usageCount: 0,
       usagePeriodStart: new Date(),
       stripeCustomerId: null,
     };

@@ -9,12 +9,18 @@ const SKILLS: SkillLevel[] = ["beginner", "intermediate", "advanced"];
 const OUTPUTS: OutputType[] = ["simple", "advanced", "workflow"];
 const PLATFORMS: Platform[] = ["claude", "chatgpt", "gemini", "midjourney", "generic"];
 
+// Strip characters that enable prompt injection: newlines and backticks are the
+// primary vectors when content is interpolated into a system prompt.
+function sanitize(s: string, maxLen: number): string {
+  return s.replace(/[\r\n`]/g, " ").trim().slice(0, maxLen);
+}
+
 /** Normalize + validate a generation request body. Returns null if invalid. */
 export function parseGenerationInput(body: unknown): GenerationInput | null {
   if (!body || typeof body !== "object") return null;
   const b = body as Record<string, unknown>;
-  const industry = typeof b.industry === "string" ? b.industry.trim() : "";
-  const useCase = typeof b.useCase === "string" ? b.useCase.trim() : "";
+  const industry = typeof b.industry === "string" ? sanitize(b.industry, 120) : "";
+  const useCase = typeof b.useCase === "string" ? sanitize(b.useCase, 400) : "";
   if (!industry || !useCase) return null;
 
   const skillLevel = SKILLS.includes(b.skillLevel as SkillLevel)
@@ -26,14 +32,8 @@ export function parseGenerationInput(body: unknown): GenerationInput | null {
   const platform = PLATFORMS.includes(b.platform as Platform)
     ? (b.platform as Platform)
     : "generic";
-  const tone = typeof b.tone === "string" ? b.tone.slice(0, 120) : undefined;
+  const tone =
+    typeof b.tone === "string" ? sanitize(b.tone, 120) : undefined;
 
-  return {
-    industry: industry.slice(0, 120),
-    useCase: useCase.slice(0, 400),
-    skillLevel,
-    outputType,
-    platform,
-    tone,
-  };
+  return { industry, useCase, skillLevel, outputType, platform, tone };
 }
