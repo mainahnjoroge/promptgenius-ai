@@ -47,7 +47,7 @@ export async function getCurrentUser(): Promise<AppUser> {
     // DB unavailable (no DATABASE_URL / SQLite not writable on serverless) — demo user fallback.
     return {
       id,
-      email,
+      email: email ?? null,
       tier: "professional" as TierId,
       billingInterval: "monthly",
       usageCount: 2,
