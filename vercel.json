@@ -1,7 +1,7 @@
 {
   "framework": "nextjs",
-  "buildCommand": "rm -rf apps/web/.next/cache && pnpm core:build && pnpm --filter web build",
+  "buildCommand": "pnpm core:build && pnpm --filter web build",
   "outputDirectory": "apps/web/.next",
-  "installCommand": "pnpm install --frozen-lockfile",
+  "installCommand": "rm -rf node_modules apps/web/node_modules apps/mobile/node_modules packages/core/node_modules && pnpm install --frozen-lockfile",
   "devCommand": "pnpm --filter web dev"
 }
