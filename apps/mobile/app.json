@@ -1,0 +1,25 @@
+{
+  "expo": {
+    "name": "PromptGenius AI",
+    "slug": "promptgenius-ai",
+    "scheme": "promptgenius",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "splash": {
+      "backgroundColor": "#0a0e1a"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "ai.promptgenius.app"
+    },
+    "android": {
+      "package": "ai.promptgenius.app"
+    },
+    "plugins": ["expo-router", "expo-secure-store"],
+    "experiments": {
+      "typedRoutes": false
+    }
+  }
+}

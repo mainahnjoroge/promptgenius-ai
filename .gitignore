@@ -1,0 +1,48 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# builds
+dist/
+.next/
+out/
+build/
+.expo/
+.turbo/
+
+# env
+.env
+.env.local
+.env.*.local
+
+# database (dev SQLite)
+*.db
+*.db-journal
+apps/web/prisma/dev.db*
+
+# logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# os / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# misc
+*.tsbuildinfo
+coverage/
+
+.vercel
+
+# PWA generated service worker files
+apps/web/public/sw.js
+apps/web/public/workbox-*.js
+apps/web/public/sw.js.map
+apps/web/public/workbox-*.js.map
+
+# core built output
+packages/core/dist/

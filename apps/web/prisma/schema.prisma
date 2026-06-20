@@ -1,0 +1,49 @@
+// PromptGenius AI — data model.
+// Dev uses SQLite (zero external accounts). For production, switch the
+// datasource `provider` to "postgresql" and point DATABASE_URL at Neon/Supabase.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String   @id // Clerk user id, or "demo-user" in mock mode
+  email            String?
+  tier             String   @default("starter") // starter | professional | enterprise
+  billingInterval  String   @default("monthly") // monthly | annual
+  usageCount       Int      @default(0)
+  usagePeriodStart DateTime @default(now())
+  stripeCustomerId String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  prompts SavedPrompt[]
+}
+
+model SavedPrompt {
+  id               String   @id @default(cuid())
+  userId           String
+  title            String
+  useCase          String
+  prompt           String
+  exampleOutput    String
+  industry         String
+  skillLevel       String
+  outputType       String
+  platform         String
+  framework        String?
+  variables        String   @default("[]") // JSON-encoded CustomizationVariable[]
+  optimizationTips String   @default("[]") // JSON-encoded string[]
+  workflow         String? // JSON-encoded WorkflowStep[] | null
+  favorite         Boolean  @default(false)
+  createdAt        DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}

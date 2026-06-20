@@ -1,0 +1,29 @@
+{
+  "name": "promptgenius-ai",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@11.7.0",
+  "description": "PromptGenius AI — a commercial SaaS prompt-generator engine (web + mobile + landing).",
+  "scripts": {
+    "build": "pnpm -r run build",
+    "test": "pnpm -r run test",
+    "lint": "pnpm -r run lint",
+    "typecheck": "pnpm -r run typecheck",
+    "dev": "pnpm core:build && pnpm --filter web dev",
+    "web": "pnpm core:build && pnpm --filter web dev",
+    "mobile": "pnpm core:build && pnpm --filter mobile start",
+    "db:push": "pnpm --filter web db:push",
+    "core:build": "pnpm --filter @promptgenius/core build"
+  },
+  "devDependencies": {
+    "docx": "^9.7.1",
+    "pdf-parse": "^2.4.5",
+    "pdf2json": "^4.0.3",
+    "pdfjs-dist": "^6.0.227",
+    "turbo": "^2.3.3",
+    "typescript": "^5.6.3"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
