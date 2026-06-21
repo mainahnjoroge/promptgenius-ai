@@ -1,15 +1,17 @@
 import { PrismaClient } from "@prisma/client";
 
-// Guard against accidentally deploying with SQLite on serverless (read-only FS).
-// Only enforced at runtime — skipped during `next build` (NEXT_PHASE) so the
-// build can run locally with a SQLite .env without tripping the guard.
+// In production, a DATABASE_URL that is set but NOT postgres is a
+// misconfiguration (e.g. a leftover SQLite `file:` URL). Surface it loudly
+// rather than silently falling into demo mode. An unset DATABASE_URL is allowed
+// — that is intentional demo mode. Skipped during `next build` (NEXT_PHASE).
 if (
   process.env.NODE_ENV === "production" &&
   process.env.NEXT_PHASE !== "phase-production-build" &&
-  process.env.DATABASE_URL?.startsWith("file:")
+  process.env.DATABASE_URL &&
+  !/^postgres(ql)?:\/\//i.test(process.env.DATABASE_URL)
 ) {
   throw new Error(
-    "SQLite cannot be used in production. Set DATABASE_URL to a PostgreSQL connection string.",
+    "In production, DATABASE_URL must be a PostgreSQL connection string (or unset to run in demo mode).",
   );
 }
 

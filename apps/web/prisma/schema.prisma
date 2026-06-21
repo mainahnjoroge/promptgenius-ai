@@ -1,14 +1,22 @@
-// PromptGenius AI — data model.
-// Dev uses SQLite (zero external accounts). For production, switch the
-// datasource `provider` to "postgresql" and point DATABASE_URL at Neon/Supabase.
+// PromptGenius AI — data model (PostgreSQL).
+//
+// Production uses Neon (or any Postgres). Local dev needs no database at all:
+// when DATABASE_URL is unset (or not a postgres:// URL) the app runs in the
+// in-memory demo mode (zero external accounts) — see persistenceEnabled in
+// apps/web/src/lib/env.server.ts. To persist locally, point DATABASE_URL at a
+// Neon dev branch or a local Postgres.
+//
+//   DATABASE_URL — pooled connection (PgBouncer), used by the app at runtime.
+//   DIRECT_URL   — direct connection, used by Prisma CLI for migrations.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {

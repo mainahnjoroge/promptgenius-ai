@@ -37,7 +37,7 @@ PromptGenius AI/
    - Pricing page with 3-tier display and annual toggle
    - API routes: `/api/generate` (streams), `/api/bundles` (structured output), `/api/prompts` CRUD, `/api/checkout` + Stripe webhooks
    - Middleware: Clerk auth (with demo-user fallback when no keys)
-   - Persistence: Prisma + SQLite dev DB; Postgres-ready schema for production
+   - Persistence: Prisma + PostgreSQL (Neon); no DB configured falls back to an in-memory demo store
 
 3. **`apps/mobile`** — Expo app with tab navigation (Generate, Library, Pricing, Profile).
    - Calls web API routes (`EXPO_PUBLIC_API_URL`); offline mock fallback
@@ -50,7 +50,7 @@ Every integration point has a graceful fallback:
 - **No `ANTHROPIC_API_KEY`?** Generate deterministic sample prompts (no API calls).
 - **No Clerk keys?** Single "demo" user, no actual auth flow.
 - **No Stripe keys?** Tier upgrades flip the tier directly in Prisma (no charge).
-- **No `DATABASE_URL`?** Use local SQLite at `apps/web/prisma/dev.db`.
+- **No `DATABASE_URL`?** Use an in-memory demo store (see `persistenceEnabled` in `apps/web/src/lib/env.server.ts`). A `postgresql://` URL switches on real Prisma persistence.
 
 This lets the product run end-to-end immediately for testing, demos, and CI/CD. Production integration keys are optional overlays.
 
@@ -85,7 +85,7 @@ The API routes check tier before processing requests. The UI reads tier and disp
 | `pnpm web` | Start web dev server at http://localhost:3000 (builds core first) |
 | `pnpm mobile` | Start Expo dev server (builds core first; open in Expo Go or simulator) |
 | `pnpm --filter web dev` | Dev web without rebuilding core (faster iteration if core didn't change) |
-| `pnpm db:push` | Sync Prisma schema to local SQLite database |
+| `pnpm db:push` | Sync Prisma schema to the Postgres DB (`DATABASE_URL`/`DIRECT_URL` must be set) |
 
 ### Build & Test
 

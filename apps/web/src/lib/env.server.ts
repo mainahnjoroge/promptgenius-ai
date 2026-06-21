@@ -30,13 +30,14 @@ export const authEnabledServer = !!(serverEnv.clerkSecret && serverEnv.clerkPubl
 export const billingEnabledServer = !!serverEnv.stripeSecret;
 
 /**
- * True when a real, writable database is configured. In dev we always persist
- * (local SQLite is fine). In production a SQLite (`file:`) URL or no URL means
- * the serverless filesystem is read-only — so we fall back to an in-memory demo
- * store instead of crashing. When a real DB IS configured but a query fails, we
- * still fail closed (see user.ts) rather than silently degrading.
+ * True only when a real PostgreSQL database is configured (Neon in production,
+ * a Neon dev branch or local Postgres in development). When it is NOT — i.e. no
+ * DATABASE_URL, or a non-postgres URL — the app runs in the in-memory demo mode
+ * (zero external accounts) instead of touching Prisma. This keeps local dev and
+ * the public demo working with no setup, gives dev/prod parity (Postgres only,
+ * no SQLite), and means a misconfigured URL degrades to a visible demo rather
+ * than crashing. When a real DB IS configured but a query fails, getCurrentUser
+ * still fails closed (see user.ts) rather than silently degrading.
  */
 const dbUrl = process.env.DATABASE_URL;
-export const persistenceEnabled =
-  process.env.NODE_ENV !== "production" ||
-  (!!dbUrl && !dbUrl.startsWith("file:"));
+export const persistenceEnabled = !!dbUrl && /^postgres(ql)?:\/\//i.test(dbUrl);
